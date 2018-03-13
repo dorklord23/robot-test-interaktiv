@@ -19,6 +19,7 @@
     font-weight: bold;
     font-size: 1.5em;
     text-align: center;
+    vertical-align: middle;
     flex: 1 0 auto;
     height:auto;
     position: relative;

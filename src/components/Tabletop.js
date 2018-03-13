@@ -11,7 +11,11 @@ class Cell extends Component {
         }
 
         return (
-            <div id={'cell-' + props.x + props.y} className="flex-item">{props.x}, {props.y}{content}</div>
+            <div id={'cell-' + props.x + props.y} className="flex-item">
+                <div style={{'verticalAlign':'middle'}}>
+                    {props.x}, {props.y}{content}
+                </div>
+            </div>
         )
     }
 }
