@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import axios from 'axios'
 
 class Cell extends Component {
     render() {
@@ -72,11 +73,11 @@ function mapDispatchToProps(dispatch) {
         turn_robot : (direction) => dispatch({
             type : 'TURN',
             payload : direction
-        }),
+        })/*,
         save_log : (log) => dispatch({
             type : 'SAVE',
             payload : log
-        })
+        })*/
     }
 }
 
@@ -86,12 +87,16 @@ class Menu extends Component {
         this.do_action = this.do_action.bind(this)
         this.update_input = this.update_input.bind(this)
         this.check_first_command = this.check_first_command.bind(this)
+        this.save_log = this.save_log.bind(this)
+        this.upload_log = this.upload_log.bind(this)
 
         this.state = {
             action : ''
         }
 
         this.PLACE_pattern = /^PLACE \d,\d,(NORTH|EAST|SOUTH|WEST){1,}/
+        this.LOG = 'interaktiv_log'
+        this.EMAIL = 'trirawibowo@gmail.com'
     }
 
     update_input(e) {
@@ -105,6 +110,58 @@ class Menu extends Component {
         const {state} = this
 
         return this.PLACE_pattern.test(state.action)
+    }
+
+    save_log(log) {
+        // Get current log
+        let current_log = sessionStorage.getItem(this.LOG) || "[]"
+
+        current_log = JSON.parse(current_log)
+        current_log.push(log)
+        current_log = JSON.stringify(current_log)
+
+        sessionStorage.setItem(this.LOG, current_log)
+    }
+
+    async upload_log() {
+        try {
+            const {props} = this
+            let log = sessionStorage.getItem(this.LOG) || '[]'
+            log = JSON.parse(log)
+
+            // Further processing the log so it conforms to the requested format
+            const data = log.map(el => {
+                if (this.PLACE_pattern.test(el)) {
+                    return {
+                        action : 'PLACE',
+                        value : el.slice(6),
+                        creator : this.EMAIL
+                    }
+                }
+
+                // Otherwise...
+                return {
+                    action : el,
+                    value : props.coord_x + ',' + props.coord_y, // Add the direction
+                    creator : this.EMAIL
+                }
+            })
+
+            const config = {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "test-robot-interaktiv",
+                    "email": this.EMAIL
+                }
+            }
+
+            const result = await axios.post(' https://test.interaktiv.sg/robot-test/', data, config)
+            alert('Saved in the cloud')
+        }
+        catch(err) {
+            console.error(err)
+            alert(err.message)
+        }
     }
 
     do_action(e) {
@@ -135,6 +192,9 @@ class Menu extends Component {
                 alert('Starting a new session')
                 sessionStorage.setItem('interaktiv', parseInt(session) + 1)
                 action_type = 'PLACE'
+
+                // Reset the log
+                sessionStorage.setItem(this.LOG, '[]')
             }
 
             // Otherwise, proceed as usual
@@ -153,7 +213,7 @@ class Menu extends Component {
                 break
 
             case 'MOVE':
-                props.move_robot()
+                //props.move_robot()
                 break
 
             case 'LEFT':
@@ -165,11 +225,15 @@ class Menu extends Component {
                 break
 
             case 'SAVE':
+                this.upload_log()
                 break
 
             default:
                 alert(state.action + ' is not a valid command')
         }
+
+        // Always save the command
+        this.save_log(state.action)
     }
 
     render() {
@@ -185,7 +249,7 @@ class Menu extends Component {
     }
 }
 
-Menu = connect(null, mapDispatchToProps)(Menu)
+Menu = connect(mapStateToProps, mapDispatchToProps)(Menu)
 
 export default class Tabletop extends Component {
     render() {

@@ -9,14 +9,14 @@ const default_state = {
     coord_x : '',
     coord_y : '',
     direction : NORTH,
-    movement : '',
-    log : []
+    movement : ''/*,
+    log : []*/
 }
 
 const PLACE = 'PLACE'
 const MOVE = 'MOVE'
 const TURN = 'TURN'
-const SAVE = 'SAVE'
+//const SAVE = 'SAVE'
 
 function reducer(state = default_state, action) {
     switch (action.type) {
@@ -58,6 +58,9 @@ function reducer(state = default_state, action) {
                 case NORTH:
                     new_direction = action.payload === 'right' ? EAST : WEST
                     break
+
+                default:
+                    new_direction = action.payload === 'right' ? EAST : WEST
             }
 
             return Object.assign({}, state, {direction : new_direction})
